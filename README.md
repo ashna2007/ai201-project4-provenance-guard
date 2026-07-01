@@ -1,6 +1,11 @@
-# Provenance Guard
+
+# PROVENANCE GUARD
 
 Provenance Guard is a Flask-based backend system that helps creative platforms determine whether submitted text is likely AI-generated, likely human-written, or uncertain. Rather than forcing a binary decision, the system combines multiple detection signals into a confidence score, generates a transparent label for readers, records every decision in an audit log, and allows creators to appeal classifications.
+
+---
+
+Demo Video Link: https://drive.google.com/file/d/1W-h9eq2tbuwY_mICq_jmnbj6WGwE6J8h/view?usp=sharing 
 
 ---
 
