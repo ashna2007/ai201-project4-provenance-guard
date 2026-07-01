@@ -268,3 +268,17 @@ I will verify it by testing four inputs: clearly AI-like, clearly human-like, fo
 I will provide the AI tool with the label variants, appeals workflow, and API surface. I will ask it to generate the label function, POST /appeal, GET /log, audit logging, and Flask-Limiter setup.
 
 I will verify it by checking that all three labels can appear, appeals update status to under_review, and rate limiting returns 429.
+
+# Stretch Feature: Ensemble Detection
+
+For extra credit, I extended the detection pipeline with a third independent detection signal called `phrase_score`. This signal searches for common AI-associated phrases such as "it is important to note," "furthermore," "moreover," and "in conclusion." It returns a normalized score between 0.0 and 1.0 based on how many phrases are present.
+
+The confidence score is now calculated using a weighted ensemble of three signals:
+
+```text
+combined_score =
+(0.55 × llm_score)
++
+(0.25 × stylometric_score)
++
+(0.20 × phrase_score)

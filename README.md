@@ -395,3 +395,31 @@ Potential future enhancements include:
 - multi-modal support
 - persistent database storage
 - authentication for protected endpoints
+
+
+# Stretch Feature — Ensemble Detection
+
+I completed the Ensemble Detection stretch by adding a third independent detection signal called `phrase_score`.
+
+This signal scans submitted text for common AI-associated phrases such as:
+
+- "it is important to note"
+- "furthermore"
+- "moreover"
+- "in conclusion"
+- "overall"
+- "therefore"
+- "stakeholders"
+- "transformative"
+
+The phrase score returns a normalized value from `0.0` to `1.0` based on how many of these phrases appear in the text.
+
+The confidence formula was updated to use three weighted signals:
+
+```text
+combined_score =
+(0.55 × llm_score)
++
+(0.25 × stylometric_score)
++
+(0.20 × phrase_score)

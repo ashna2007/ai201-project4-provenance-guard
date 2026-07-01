@@ -255,20 +255,54 @@ def stylometric_score(text):
 
 
 # ---------------------------------------------------------------------------
+# Detection Signal 3: AI-associated phrase matching (pure Python)
+# ---------------------------------------------------------------------------
+
+# Phrases commonly over-represented in AI-generated writing. Kept lowercase so
+# matching is case-insensitive.
+AI_PHRASES = (
+    "it is important to note",
+    "furthermore",
+    "moreover",
+    "in conclusion",
+    "overall",
+    "therefore",
+    "stakeholders",
+    "transformative",
+)
+
+
+def phrase_score(text):
+    """Estimate AI-likeness from the presence of AI-associated phrases.
+
+    Counts how many distinct phrases from AI_PHRASES appear in the text and
+    normalizes by the total number of phrases. Returns a float in [0.0, 1.0]
+    where higher means more AI-like.
+    """
+    lowered = (text or "").lower()
+    hits = sum(1 for phrase in AI_PHRASES if phrase in lowered)
+    return hits / len(AI_PHRASES)
+
+
+# ---------------------------------------------------------------------------
 # Confidence scoring & label selection
 # ---------------------------------------------------------------------------
 
 
-def classify(llm, stylo):
-    """Combine the two signals and map to an attribution + label.
+def classify(llm, stylo, phrase):
+    """Combine the three signals and map to an attribution + label.
 
-    combined = 0.65 * llm_score + 0.35 * stylometric_score
+    combined = 0.55 * llm_score + 0.25 * stylometric_score + 0.20 * phrase_score
 
       >= 0.75         -> likely_ai
       0.40 - 0.74     -> uncertain
       <  0.40         -> likely_human
     """
-    combined = 0.65 * llm + 0.35 * stylo
+    combined = (
+        0.55 * llm +
+        0.25 * stylo +
+        0.20 * phrase
+    )
 
     if combined >= 0.75:
         attribution = "likely_ai"
@@ -303,12 +337,13 @@ def submit():
     if not creator_id or not isinstance(creator_id, str):
         return jsonify({"error": "Field 'creator_id' is required and must be a string."}), 400
 
-    # --- Run both detection signals --------------------------------------
+    # --- Run all three detection signals ---------------------------------
     signal_llm = llm_score(text)
     signal_stylo = stylometric_score(text)
+    signal_phrase = phrase_score(text)
 
     # --- Combine and label ------------------------------------------------
-    attribution, confidence, label = classify(signal_llm, signal_stylo)
+    attribution, confidence, label = classify(signal_llm, signal_stylo, signal_phrase)
 
     # --- Build the audit log entry ---------------------------------------
     content_id = str(uuid.uuid4())
@@ -320,6 +355,7 @@ def submit():
         "confidence": confidence,
         "llm_score": round(signal_llm, 4),
         "stylometric_score": round(signal_stylo, 4),
+        "phrase_score": round(signal_phrase, 4),
         "label": label,
         "status": "classified",
     }
@@ -337,6 +373,7 @@ def submit():
         "confidence": confidence,
         "llm_score": round(signal_llm, 4),
         "stylometric_score": round(signal_stylo, 4),
+        "phrase_score": round(signal_phrase, 4),
         "label": label,
         "status": entry["status"],
     }), 200
